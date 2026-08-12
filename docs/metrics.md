@@ -4,17 +4,25 @@
 reported **per difficulty bucket** (see docs/schema.md) plus an overall row —
 the buckets are the point.
 
+## Matching policy
+
+Segments are matched by `id`. Within a segment, predicted words are matched
+to gold words by longest-common-subsequence over normalized text (lowercase,
+alphanumerics + apostrophe only) — this tolerates ASR insertions/deletions
+and punctuation drift. A gold word with no match is a **miss**.
+
 ## Word-level onset metrics
 
-Words are matched between prediction and gold by position within the segment
-(same lyrics, same order). For each matched word, onset error is
-`|pred_start − gold_start|`.
+For each matched word, onset error is `|pred_start − gold_start|`.
 
-- **Mean Absolute Onset Error (ms)** — mean onset error over all words.
+- **Coverage** — matched gold words / all gold words. Reported per bucket;
+  misses are a real failure mode (Whisper drops ~30% of words on fast rap).
+- **Mean Absolute Onset Error (ms)** — mean onset error over *matched* words.
 - **Median Absolute Onset Error (ms)** — median of the same; robust to
   catastrophic misses that wreck the mean.
-- **PCO@τ (Percentage of Correct Onsets)** — fraction of words with onset
-  error < τ, at τ ∈ {100, 200, 300} ms.
+- **PCO@τ (Percentage of Correct Onsets)** — words with onset error < τ,
+  at τ ∈ {100, 200, 300} ms, **divided by all gold words** — a missed word
+  counts as an incorrect onset. Strict by design.
 
 ## Reporting
 
