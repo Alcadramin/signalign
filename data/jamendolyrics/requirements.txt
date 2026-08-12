@@ -1,0 +1,8 @@
+numpy
+matplotlib
+seaborn
+librosa
+configparser
+mir_eval
+unidecode
+datasets==3.2.0

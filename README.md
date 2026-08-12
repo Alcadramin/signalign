@@ -1,15 +1,23 @@
 # signalign
 
-**An open, actually-usable word-level aligner for *sung* vocals** — the piece open
-music-generation models (ACE-Step, DiffRhythm, etc.) are missing, because speech
-aligners break on singing: held notes, melisma, fast rap, buried vocals.
+**The missing evaluation + data infrastructure for sung-vocal alignment.**
 
-Narrow tool, built for the open ecosystem to build on. Not a Suno competitor.
+Two artifacts the field doesn't have:
+
+- **signalign-bench** — the first difficulty-bucketed word-level alignment
+  benchmark for singing (rap / melisma / held notes / buried vocals / clean)
+- **signalign-corpus** — a large, openly licensed, *redistributable* aligned
+  singing corpus for training open music-generation models
+
+Plus the aligner pipeline that produces the corpus. Speech aligners drift on
+singing; gen-model teams hand-roll alignment hacks because no shared benchmark
+or open corpus exists. This fixes the infrastructure, not just the tool.
 
 ## Status
 
-Early. Phase 0: baseline exploration (Demucs → Whisper → wav2vec2 forced
-alignment) to map exactly where speech aligners drift on singing.
+Early. Phase 0 done: baseline (Demucs → Whisper → wav2vec2 forced alignment)
+runs end to end; on fast rap it drops 32% of words — see
+[docs/plan.md](docs/plan.md) for the full plan and findings.
 
 ## Quickstart (baseline explorer)
 
@@ -23,10 +31,10 @@ Emits word-level timings as JSONL per [`docs/schema.md`](docs/schema.md).
 ## Roadmap
 
 - [x] **Phase 0** — baseline stack end to end; map failure modes
-- [ ] **Phase 1** — hand-corrected golden eval set + scoring harness (`signalign-eval`)
-- [ ] **Phase 2** — dataset factory with confidence gating (`signalign-train`)
-- [ ] **Phase 3** — fine-tune wav2vec2 CTC on sung vocals, beat the baseline (`signalign-w2v-sung`)
-- [ ] **Phase 4** — pip package, Gradio demo Space, integrations, community
+- [ ] **Phase 1** — `signalign-bench`: bucketed benchmark + scoring harness + baseline zoo
+- [ ] **Phase 2** — `signalign-corpus`: factory with license-clean sources + calibrated confidence gate
+- [ ] **Phase 3** — (optional) fine-tune for factory quality; WhisperX upstream
+- [ ] **Phase 4** — HF leaderboard Space, contribution paths, tech report
 
 ## Layout
 
