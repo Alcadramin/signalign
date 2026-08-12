@@ -5,6 +5,7 @@ import re
 import unicodedata
 from pathlib import Path
 
+import soundfile
 import torch
 import torchaudio
 from demucs.api import Separator, save_audio
@@ -53,8 +54,8 @@ def force_align(
     dictionary = {c: i for i, c in enumerate(labels)}
     separator_id = dictionary["|"]
 
-    waveform, sample_rate = torchaudio.load(str(vocal_path))
-    mono = waveform.mean(0, keepdim=True)
+    audio, sample_rate = soundfile.read(str(vocal_path), dtype="float32", always_2d=True)
+    mono = torch.from_numpy(audio.T).mean(0, keepdim=True)
     if sample_rate != bundle.sample_rate:
         mono = torchaudio.functional.resample(mono, sample_rate, bundle.sample_rate)
 
