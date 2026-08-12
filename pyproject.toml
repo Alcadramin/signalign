@@ -1,0 +1,15 @@
+[project]
+name = "signalign"
+version = "0.1.0"
+description = "Open word-level aligner for sung vocals"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dependencies = [
+    "torch~=2.11.0",
+    "torchaudio~=2.11.0",
+    "demucs>=4.0.1",
+    "faster-whisper>=1.0",
+    "numpy",
+    "soundfile",
+]

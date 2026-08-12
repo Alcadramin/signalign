@@ -14,8 +14,8 @@ alignment) to map exactly where speech aligners drift on singing.
 ## Quickstart (baseline explorer)
 
 ```bash
-pip install -r requirements.txt
-python scripts/explore.py --audio path/to/song.wav
+uv sync
+uv run scripts/explore.py --audio path/to/song.wav
 ```
 
 Emits word-level timings as JSONL per [`docs/schema.md`](docs/schema.md).
