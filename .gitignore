@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+out/
+*.wav
+*.mp3
+*.flac
+*.ogg
+stems/
+clips/
+.remember/
