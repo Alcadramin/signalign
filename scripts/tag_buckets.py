@@ -16,11 +16,13 @@ def load_genres(dataset_csv: Path) -> dict[str, str]:
         return {Path(row["Filepath"]).stem: row["Genre"] for row in csv.DictReader(f)}
 
 
-def play(audio_path: str, start: float, duration: float) -> None:
-    subprocess.run(
+def start_play(audio_path: str, start: float, duration: float) -> subprocess.Popen:
+    return subprocess.Popen(
         ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet",
          "-ss", str(start), "-t", str(duration), audio_path],
-        check=False,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
 
 
@@ -48,29 +50,37 @@ def main() -> None:
     print(f"{len(todo)} of {len(records)} tracks to tag")
     print("keys: [c]lean [r]ap [m]elisma [h]eld [b]uried | [p]lay again [f]ull [s]kip [q]uit")
 
-    for record in todo:
-        start = max(0.0, record["duration"] * 0.25)
-        genre = genres.get(record["id"], "?")
-        print(f"\n--- {record['id']}  (genre hint: {genre})")
-        play(record["audio_path"], start, args.clip_seconds)
-        while True:
-            key = input("bucket> ").strip().lower()
-            if key == "p":
-                play(record["audio_path"], start, args.clip_seconds)
-            elif key == "f":
-                play(record["audio_path"], 0.0, record["duration"])
-            elif key == "s":
-                break
-            elif key == "q":
-                print("bye — progress saved, rerun to continue")
-                return
-            elif key in KEYMAP:
-                with open(args.buckets, "a") as f:
-                    f.write(f"{record['id']},{KEYMAP[key]}\n")
-                print(f"  -> {KEYMAP[key]}")
-                break
-            else:
-                print(f"  keys: {sorted(KEYMAP)} or p/f/s/q")
+    player = None
+    try:
+        for record in todo:
+            start = max(0.0, record["duration"] * 0.25)
+            genre = genres.get(record["id"], "?")
+            print(f"\n--- {record['id']}  (genre hint: {genre})")
+            player = start_play(record["audio_path"], start, args.clip_seconds)
+            while True:
+                key = input("bucket> ").strip().lower()
+                if key == "p":
+                    player.terminate()
+                    player = start_play(record["audio_path"], start, args.clip_seconds)
+                elif key == "f":
+                    player.terminate()
+                    player = start_play(record["audio_path"], 0.0, record["duration"])
+                elif key == "s":
+                    break
+                elif key == "q":
+                    print("bye — progress saved, rerun to continue")
+                    return
+                elif key in KEYMAP:
+                    with open(args.buckets, "a") as f:
+                        f.write(f"{record['id']},{KEYMAP[key]}\n")
+                    print(f"  -> {KEYMAP[key]}")
+                    break
+                else:
+                    print(f"  keys: {sorted(KEYMAP)} or p/f/s/q")
+            player.terminate()
+    finally:
+        if player is not None:
+            player.terminate()
 
     print("\nall tagged. apply with: uv run scripts/apply_buckets.py")
 
