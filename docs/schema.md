@@ -36,6 +36,9 @@ alternate formats.
 | `words[].text` | string | yes | The word as written in the lyrics |
 | `words[].start` | float | yes | Word onset in seconds, relative to segment start |
 | `words[].end` | float | yes | Word offset in seconds, relative to segment start |
+| `words[].score` | float | no | Mean CTC posterior for the word's tokens (factory output) |
+| `alignment_score` | float \| null | no | Mean of word scores over the segment |
+| `language` | string \| null | no | Track language when known |
 | `difficulty` | string \| null | no | Human-assigned bucket; see below. `null` until assigned |
 | `asr_confidence` | float \| null | no | Mean ASR confidence over the segment, 0–1 |
 | `cer_vs_lyrics` | float \| null | no | Character error rate of ASR vs reference lyrics |
