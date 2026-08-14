@@ -39,6 +39,10 @@ def transcribe(vocal_path: Path, device: str, model_size: str) -> tuple[list[str
     return words, confidence
 
 
+def load_lyrics_words(lyrics_path: Path) -> list[str]:
+    return lyrics_path.read_text().split()
+
+
 def normalize_word(word: str) -> str:
     decomposed = unicodedata.normalize("NFKD", word)
     ascii_only = decomposed.encode("ascii", "ignore").decode("ascii")
@@ -107,6 +111,7 @@ def main() -> None:
         description="Baseline sung-vocal aligner: Demucs -> Whisper -> wav2vec2 forced alignment"
     )
     parser.add_argument("--audio", type=Path, required=True)
+    parser.add_argument("--lyrics", type=Path, default=None)
     parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--whisper-model", default="medium")
     parser.add_argument("--work-dir", type=Path, default=Path("out"))
@@ -119,11 +124,18 @@ def main() -> None:
     print(f"[1/3] separating vocals (demucs htdemucs, {device})")
     vocal_path = separate_vocals(args.audio, args.work_dir, device)
 
-    print(f"[2/3] transcribing (faster-whisper {args.whisper_model})")
-    words, confidence = transcribe(vocal_path, device, args.whisper_model)
-    if not words:
-        raise SystemExit("whisper produced no transcript; is there a vocal?")
-    print(f"      {len(words)} words, asr_confidence={confidence:.2f}")
+    if args.lyrics:
+        print("[2/3] using provided lyrics (no ASR)")
+        words, confidence = load_lyrics_words(args.lyrics), None
+        if not words:
+            raise SystemExit("lyrics file is empty")
+        print(f"      {len(words)} words")
+    else:
+        print(f"[2/3] transcribing (faster-whisper {args.whisper_model})")
+        words, confidence = transcribe(vocal_path, device, args.whisper_model)
+        if not words:
+            raise SystemExit("whisper produced no transcript; is there a vocal?")
+        print(f"      {len(words)} words, asr_confidence={confidence:.2f}")
 
     print("[3/3] forced alignment (wav2vec2 CTC)")
     timed_words, duration = force_align(vocal_path, words, device)
@@ -135,7 +147,7 @@ def main() -> None:
         "duration": round(duration, 3),
         "words": timed_words,
         "difficulty": None,
-        "asr_confidence": round(confidence, 3),
+        "asr_confidence": round(confidence, 3) if confidence is not None else None,
         "cer_vs_lyrics": None,
         "source": "local",
         "license": "unknown",

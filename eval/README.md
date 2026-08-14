@@ -27,9 +27,16 @@ as separate manifests in `data/bench/`.
 
 ## Reference numbers (Phase 0 baseline, one rap track)
 
-Demucs → Whisper medium (ASR transcript, no lyrics input) → wav2vec2 CTC:
-coverage 0.51, MAE 450ms, MedAE 67ms, PCO@100 39%. Timing on matched words
-is workable; word coverage is the dominant failure on rap.
+Demucs → wav2vec2 CTC forced alignment, on Wordsmith_-_The_Statement (rap):
+
+| transcript source | coverage | MAE | MedAE | PCO@100 | PCO@200 |
+|---|---|---|---|---|---|
+| Whisper medium ASR | 0.51 | 450ms | 67ms | 39% | 45% |
+| gold lyrics (`--lyrics`) | 1.00 | 67ms | 64ms | 84% | 99.3% |
+
+Word coverage, not timing, dominates the ASR path on rap. Lyrics-informed
+forced alignment is the factory default; ASR-only is the fallback when no
+lyrics exist.
 
 ## Tests
 
