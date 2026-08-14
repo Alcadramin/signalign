@@ -44,6 +44,31 @@ English. Root cause uninvestigated (candidates: long instrumental sections
 derailing global CTC alignment, production density). Bucket mix per language
 is roughly even, so buckets don't explain it.
 
+## Zoo row 2: WhisperX medium (ASR path — no lyrics input possible)
+
+Run: `uvx whisperx --model medium --compute_type int8` per track, auto
+language detect (one failure: German rap misdetected as Khmer, rerun with
+`--language de`). Raw: `whisperx_medium.json`.
+
+| bucket | words | cov | MAE ms | MedAE ms | PCO@100 | PCO@300 |
+|---|---|---|---|---|---|---|
+| buried | 3181 | 0.48 | 1847 | 72 | 28.1% | 34.7% |
+| clean | 11257 | 0.56 | 2480 | 55 | 39.1% | 47.6% |
+| held | 951 | 0.68 | 855 | 57 | 43.7% | 57.2% |
+| melisma | 1270 | 0.61 | 1637 | 74 | 38.5% | 49.7% |
+| rap | 4921 | 0.58 | 2171 | 42 | 44.4% | 48.5% |
+| **all** | 21580 | **0.56** | **2187** | **54** | **38.9%** | **46.5%** |
+
+Reading: WhisperX drops 44% of sung words and misplaces entire segments by
+seconds (Whisper hallucinations on music — e.g. Amara.org subtitle credits
+transcribed into a song). Local timing of found words is fine (54ms MedAE).
+The failure mode is transcription + segment placement, not frame precision.
+Whisper language ID is also unreliable on singing (Khmer misdetection).
+
+This is the project's core gap, quantified: lyrics-informed alignment
+(150ms MAE, 100% coverage) vs the best available ASR-path tool (2187ms,
+56% coverage) on identical audio and gold.
+
 ## Caveats
 
 - Non-English tracks (~half the set) are aligned with an English char
