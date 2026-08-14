@@ -23,8 +23,8 @@ def match_words(pred_words: list[dict], gold_words: list[dict]) -> list[tuple[in
     return pairs
 
 
-def bucket_of(segment: dict) -> str:
-    return segment.get("difficulty") or "unbucketed"
+def bucket_of(segment: dict, group_by: str = "difficulty") -> str:
+    return segment.get(group_by) or "unbucketed"
 
 
 def metrics_from(errors_ms: list[float], n_gold: int) -> dict:
@@ -41,13 +41,15 @@ def metrics_from(errors_ms: list[float], n_gold: int) -> dict:
     return result
 
 
-def score_segments(pred_segments: list[dict], gold_segments: list[dict]) -> dict:
+def score_segments(
+    pred_segments: list[dict], gold_segments: list[dict], group_by: str = "difficulty"
+) -> dict:
     pred_by_id = {s["id"]: s for s in pred_segments}
     errors_by_bucket: dict[str, list[float]] = {}
     gold_counts: dict[str, int] = {}
 
     for gold_seg in gold_segments:
-        bucket = bucket_of(gold_seg)
+        bucket = bucket_of(gold_seg, group_by)
         gold_words = gold_seg["words"]
         gold_counts[bucket] = gold_counts.get(bucket, 0) + len(gold_words)
         errors_by_bucket.setdefault(bucket, [])
@@ -74,8 +76,8 @@ def load_jsonl(path: Path) -> list[dict]:
         return [json.loads(line) for line in f if line.strip()]
 
 
-def score_files(pred_path: Path, gold_path: Path) -> dict:
-    return score_segments(load_jsonl(pred_path), load_jsonl(gold_path))
+def score_files(pred_path: Path, gold_path: Path, group_by: str = "difficulty") -> dict:
+    return score_segments(load_jsonl(pred_path), load_jsonl(gold_path), group_by)
 
 
 def format_table(result: dict) -> str:
@@ -98,9 +100,10 @@ def main() -> None:
     parser.add_argument("--pred", type=Path, required=True)
     parser.add_argument("--gold", type=Path, required=True)
     parser.add_argument("--json", type=Path, default=None)
+    parser.add_argument("--group-by", default="difficulty")
     args = parser.parse_args()
 
-    result = score_files(args.pred, args.gold)
+    result = score_files(args.pred, args.gold, args.group_by)
     print(format_table(result))
     if args.json:
         args.json.write_text(json.dumps(result, indent=2) + "\n")

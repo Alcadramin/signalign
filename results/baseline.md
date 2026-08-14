@@ -28,6 +28,22 @@
 - Coverage is 1.00 by construction in forced mode (every lyric word gets a
   span); coverage only discriminates in ASR-transcript mode.
 
+## Per-language (same run, `--group-by language`)
+
+| language | words | MAE ms | MedAE ms | PCO@100 |
+|---|---|---|---|---|
+| English | 5693 | 292 | 68 | 68.2% |
+| French | 5461 | 126 | 29 | 81.2% |
+| German | 5157 | 90 | 43 | 84.5% |
+| Spanish | 5269 | 81 | 29 | 86.1% |
+
+Counterintuitive: English worst despite the English char vocabulary. Driver
+is a handful of catastrophic tracks, not a uniform shift — worst offenders
+(Pure_Mids 1029ms, Tom_Orlando 953ms, Ridgway 860ms, Avercage 659ms) are all
+English. Root cause uninvestigated (candidates: long instrumental sections
+derailing global CTC alignment, production density). Bucket mix per language
+is roughly even, so buckets don't explain it.
+
 ## Caveats
 
 - Non-English tracks (~half the set) are aligned with an English char

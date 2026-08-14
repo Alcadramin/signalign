@@ -31,6 +31,7 @@ def test_ingest_produces_schema_records(tmp_path):
     assert rec["source"] == "jamendolyrics"
     assert rec["license"] == "CC BY-SA"
     assert rec["difficulty"] is None
+    assert rec["language"] == "English"
     assert rec["words"] == [
         {"text": "hello", "start": 1.5, "end": 1.7},
         {"text": "world", "start": 2.5, "end": 2.7},

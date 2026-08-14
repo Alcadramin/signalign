@@ -45,6 +45,7 @@ def ingest_track(dataset_dir: Path, meta: dict) -> dict | None:
             for text, (start, end) in zip(lyric_words, timings)
         ],
         "difficulty": None,
+        "language": meta["Language"],
         "asr_confidence": None,
         "cer_vs_lyrics": None,
         "source": "jamendolyrics",
