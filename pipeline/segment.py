@@ -52,10 +52,16 @@ def slice_words(
 
 
 def vad_spans(vocal_path: str, sample_rate: int = 16000) -> list[tuple[float, float]]:
+    import soundfile
     import torch
-    from silero_vad import get_speech_timestamps, load_silero_vad, read_audio
+    import torchaudio
+    from silero_vad import get_speech_timestamps, load_silero_vad
+
+    audio, source_rate = soundfile.read(vocal_path, dtype="float32", always_2d=True)
+    mono = torch.from_numpy(audio.T).mean(0)
+    if source_rate != sample_rate:
+        mono = torchaudio.functional.resample(mono, source_rate, sample_rate)
 
     model = load_silero_vad()
-    audio = read_audio(vocal_path, sampling_rate=sample_rate)
-    timestamps = get_speech_timestamps(audio, model, sampling_rate=sample_rate)
+    timestamps = get_speech_timestamps(mono, model, sampling_rate=sample_rate)
     return [(t["start"] / sample_rate, t["end"] / sample_rate) for t in timestamps]

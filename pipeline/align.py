@@ -89,7 +89,7 @@ class Aligner:
             log_probs, target_tensor, blank=0
         )
         token_spans = self._torchaudio.functional.merge_tokens(
-            alignments[0], scores[0], blank=0
+            alignments[0], scores[0].exp(), blank=0
         )
 
         seconds_per_frame = mono.size(1) / log_probs.size(1) / self.sample_rate
