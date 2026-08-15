@@ -50,6 +50,8 @@ def build_record(
     scores = [w["score"] for w in words if "score" in w]
     return {
         "id": f"{track_id}_seg{index:03d}",
+        "track_id": track_id,
+        "track_offset": round(span_start, 3),
         "audio_path": str(clip_path),
         "vocal_stem_path": str(stem_path),
         "duration": round(span_end - span_start, 3),

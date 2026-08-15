@@ -58,3 +58,5 @@ def test_build_record_produces_schema_segment():
     assert record["difficulty"] is None
     assert record["audio_path"] == "clips/song_004.wav"
     assert record["vocal_stem_path"] == "stems/song_004.wav"
+    assert record["track_id"] == "song"
+    assert record["track_offset"] == 10.0
