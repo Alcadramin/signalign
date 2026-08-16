@@ -49,7 +49,11 @@ def fetch_page(client_id: str, offset: int, limit: int) -> list[dict]:
         }
     )
     with urllib.request.urlopen(f"{API}?{params}", timeout=60) as response:
-        return json.loads(response.read())["results"]
+        payload = json.loads(response.read())
+    headers = payload.get("headers", {})
+    if headers.get("status") != "success":
+        raise RuntimeError(f"jamendo api error: {headers}")
+    return payload["results"]
 
 
 def download(url: str, out_path: Path) -> None:
