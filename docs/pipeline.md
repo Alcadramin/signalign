@@ -13,8 +13,9 @@ uv run python pipeline/run.py --config my.toml
 [input]
 audio_dir = "path/to/songs"        # wav/mp3/flac/ogg
 lyrics_dir = "path/to/lyrics"      # optional; <track-stem>.txt per song
+licenses_csv = "tracks.csv"        # optional; per-track license (id,license columns)
 source = "mysource"                # provenance tag written to every record
-license = "CC-BY-4.0"              # license written to every record
+license = "CC-BY-4.0"              # fallback license when no per-track entry
 
 [output]
 dir = "out/factory/mysource"

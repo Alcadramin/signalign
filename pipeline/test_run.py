@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from run import build_record, find_lyrics, load_config
+from run import build_record, find_lyrics, load_config, load_licenses
 
 
 def test_load_config_applies_defaults(tmp_path):
@@ -33,6 +33,18 @@ def test_find_lyrics_reads_matching_txt(tmp_path):
 
 def test_find_lyrics_none_when_missing(tmp_path):
     assert find_lyrics(Path("x/song.mp3"), tmp_path) is None
+
+
+def test_load_licenses_maps_ids_and_prefixed_stems(tmp_path):
+    csv_path = tmp_path / "tracks.csv"
+    csv_path.write_text("id,artist,title,license,url\n42,A,T,CC-BY-3.0,u\n")
+    table = load_licenses(csv_path)
+    assert table["42"] == "CC-BY-3.0"
+    assert table["jamendo_42"] == "CC-BY-3.0"
+
+
+def test_load_licenses_none_path_gives_empty(tmp_path):
+    assert load_licenses(None) == {}
 
 
 def test_build_record_produces_schema_segment():

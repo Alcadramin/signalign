@@ -26,6 +26,19 @@ def load_config(cfg_path: Path) -> dict:
     return cfg
 
 
+def load_licenses(csv_path: Path | None) -> dict[str, str]:
+    if csv_path is None or not Path(csv_path).exists():
+        return {}
+    import csv as csv_module
+
+    table: dict[str, str] = {}
+    with open(csv_path) as f:
+        for row in csv_module.DictReader(f):
+            table[row["id"]] = row["license"]
+            table[f"jamendo_{row['id']}"] = row["license"]
+    return table
+
+
 def find_lyrics(audio_path: Path, lyrics_dir: Path | None) -> list[str] | None:
     if lyrics_dir is None:
         return None
@@ -78,27 +91,31 @@ def write_clip(source_path: Path, span: tuple[float, float], out_path: Path) -> 
     soundfile.write(str(out_path), audio, sample_rate)
 
 
-def transcribe_track(vocal_path: Path, model_size: str) -> str:
+def transcribe_track(vocal_path: Path, model_size: str, device: str = "cpu") -> str:
     from faster_whisper import WhisperModel
 
-    model = WhisperModel(model_size, device="cpu", compute_type="int8")
+    compute_type = "float16" if device == "cuda" else "int8"
+    model = WhisperModel(model_size, device=device, compute_type=compute_type)
     segments, _ = model.transcribe(str(vocal_path), vad_filter=True)
     return " ".join(s.text.strip() for s in segments)
 
 
-def process_track(audio_path: Path, cfg: dict, workers: dict, out_dir: Path) -> dict:
+def process_track(
+    audio_path: Path, cfg: dict, workers: dict, out_dir: Path, licenses: dict[str, str] | None = None
+) -> dict:
     from segment import merge_spans, slice_words, vad_spans
 
     stem_path = workers["separator"].separate(audio_path, out_dir / "track_stems")
     lyric_words = find_lyrics(audio_path, cfg["input"].get("lyrics_dir"))
 
+    device = workers.get("asr_device", "cpu")
     track_cer = None
     if lyric_words is not None and cfg["asr"]["enabled"]:
-        asr_text = transcribe_track(stem_path, cfg["asr"]["model"])
+        asr_text = transcribe_track(stem_path, cfg["asr"]["model"], device)
         track_cer = round(compute_cer(asr_text, " ".join(lyric_words)), 4)
 
     if lyric_words is None:
-        asr_text = transcribe_track(stem_path, cfg["asr"]["model"])
+        asr_text = transcribe_track(stem_path, cfg["asr"]["model"], device)
         lyric_words = asr_text.split()
 
     timed_words, _ = workers["aligner"].align(stem_path, lyric_words)
@@ -124,7 +141,7 @@ def process_track(audio_path: Path, cfg: dict, workers: dict, out_dir: Path) -> 
             clip_path=clip_path.relative_to(out_dir),
             stem_path=stem_clip_path.relative_to(out_dir),
             source=cfg["input"]["source"],
-            license_=cfg["input"]["license"],
+            license_=(licenses or {}).get(audio_path.stem, cfg["input"]["license"]),
             cer=track_cer,
         )
         pile = route(record, cfg["gate"]["min_score"], cfg["gate"]["max_cer"])
@@ -149,7 +166,11 @@ def main() -> None:
     import torch
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    workers = {"separator": Separator(device=device), "aligner": Aligner(device=device)}
+    workers = {
+        "separator": Separator(device=device),
+        "aligner": Aligner(device=device),
+        "asr_device": device,
+    }
 
     audio_dir = Path(cfg["input"]["audio_dir"])
     done_ids = set()
@@ -168,9 +189,10 @@ def main() -> None:
     todo = [t for t in tracks if t.stem not in done_ids]
     print(f"{len(todo)} of {len(tracks)} tracks to process ({device})", flush=True)
 
+    licenses = load_licenses(cfg["input"].get("licenses_csv"))
     for i, track in enumerate(todo, 1):
         try:
-            counts = process_track(track, cfg, workers, out_dir)
+            counts = process_track(track, cfg, workers, out_dir, licenses)
         except Exception as error:
             print(f"[{i}/{len(todo)}] {track.stem} FAILED: {error}", flush=True)
             continue
