@@ -12,7 +12,7 @@ def test_load_config_applies_defaults(tmp_path):
     cfg = load_config(cfg_path)
     assert cfg["input"]["audio_dir"] == "songs"
     assert cfg["vad"]["max_len"] == 30.0
-    assert cfg["gate"]["min_score"] == 0.5
+    assert cfg["gate"]["min_score"] == 0.15
     assert cfg["gate"]["max_cer"] == 0.3
 
 

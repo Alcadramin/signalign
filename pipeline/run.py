@@ -11,7 +11,7 @@ from gate import route
 
 DEFAULTS = {
     "vad": {"min_gap": 0.5, "min_len": 1.0, "max_len": 30.0},
-    "gate": {"min_score": 0.5, "max_cer": 0.3},
+    "gate": {"min_score": 0.15, "max_cer": 0.3},
     "asr": {"enabled": True, "model": "medium"},
 }
 

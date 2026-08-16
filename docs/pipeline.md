@@ -25,7 +25,7 @@ min_len = 1.0                      # drop segments shorter than this (s)
 max_len = 30.0                     # split segments longer than this (s)
 
 [gate]
-min_score = 0.5                    # min mean CTC score per segment
+min_score = 0.15                   # min mean CTC score per segment (calibrated, results/gate_calibration.md)
 max_cer = 0.3                      # max CER(ASR, lyrics) per track
 
 [asr]
