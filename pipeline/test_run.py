@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from run import build_record, find_lyrics, load_config, load_licenses
+from run import alignable_count, build_record, find_lyrics, load_config, load_licenses
 
 
 def test_load_config_applies_defaults(tmp_path):
@@ -45,6 +45,12 @@ def test_load_licenses_maps_ids_and_prefixed_stems(tmp_path):
 
 def test_load_licenses_none_path_gives_empty(tmp_path):
     assert load_licenses(None) == {}
+
+
+def test_alignable_count_latin_vs_cyrillic():
+    assert alignable_count(["hello", "world"]) == 2
+    assert alignable_count(["Русь", "родная"]) == 0
+    assert alignable_count(["hello", "Русь"]) == 1
 
 
 def test_build_record_produces_schema_segment():

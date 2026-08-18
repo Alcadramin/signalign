@@ -6,8 +6,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+from align import normalize_word
 from gate import cer as compute_cer
 from gate import route
+
+MIN_ALIGNABLE_WORDS = 10
 
 DEFAULTS = {
     "vad": {"min_gap": 0.5, "min_len": 1.0, "max_len": 30.0},
@@ -24,6 +27,10 @@ def load_config(cfg_path: Path) -> dict:
         for key, value in defaults.items():
             cfg[section].setdefault(key, value)
     return cfg
+
+
+def alignable_count(words: list[str]) -> int:
+    return sum(1 for word in words if normalize_word(word))
 
 
 def load_licenses(csv_path: Path | None) -> dict[str, str]:
@@ -105,8 +112,11 @@ def process_track(
 ) -> dict:
     from segment import merge_spans, slice_words, vad_spans
 
-    stem_path = workers["separator"].separate(audio_path, out_dir / "track_stems")
     lyric_words = find_lyrics(audio_path, cfg["input"].get("lyrics_dir"))
+    if lyric_words is not None and alignable_count(lyric_words) < MIN_ALIGNABLE_WORDS:
+        raise ValueError("lyrics not alignable with current vocabulary (non-Latin?)")
+
+    stem_path = workers["separator"].separate(audio_path, out_dir / "track_stems")
 
     device = workers.get("asr_device", "cpu")
     track_cer = None
